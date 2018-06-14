@@ -8,57 +8,33 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/ryanuber/columnize"
 	"github.com/urfave/cli"
 )
+
+type History struct {
+	Title string
+	URL   string
+}
 
 func history(c *cli.Context) error {
 	dbPath := getHistoryPath(runtime.GOOS)
 
-	dbFile, err := os.Open(dbPath)
+	readFilePath, err := copyHisotryDB(dbPath)
 	if err != nil {
 		return err
-	}
-	tmpFile, err := ioutil.TempFile("/tmp", "bhb")
-	if err != nil {
-		return err
-	}
-	if _, err := io.Copy(tmpFile, dbFile); err != nil {
-		return err
-	}
-	readFilePath := tmpFile.Name()
-	dbFile.Close()
-	tmpFile.Close()
-
-	db, err := sql.Open("sqlite3", readFilePath)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	var q = ""
-	q = "select title, url from urls order by last_visit_time desc"
-	rows, err := db.Query(q)
-	if err != nil {
-		panic(err)
 	}
 
-	var outputs []string
-	for rows.Next() {
-		var title string
-		var url string
-		if err := rows.Scan(&title, &url); err != nil {
-			panic(err)
-		}
-		output := strings.Join([]string{title, url}, "|")
-		outputs = append(outputs, output)
+	historys, err := selectHistory(readFilePath)
+	if err != nil {
+		return err
 	}
-	result := columnize.SimpleFormat(outputs)
-	fmt.Println(result)
+
+	for _, history := range historys {
+		fmt.Println(history.Title, history.URL)
+	}
 	return nil
 }
 
@@ -79,4 +55,52 @@ func getHistoryPath(goos string) string {
 	}
 
 	return filepath.Join(home, browserHistoryPath)
+}
+
+func copyHisotryDB(dbPath string) (string, error) {
+	dbFile, err := os.Open(dbPath)
+	if err != nil {
+		return "", err
+	}
+	tmpFile, err := ioutil.TempFile("/tmp", "bhb")
+	if err != nil {
+		return "", err
+	}
+	if _, err := io.Copy(tmpFile, dbFile); err != nil {
+		return "", err
+	}
+	readFilePath := tmpFile.Name()
+	dbFile.Close()
+	tmpFile.Close()
+
+	return readFilePath, nil
+}
+
+func selectHistory(path string) ([]*History, error) {
+	db, err := sql.Open("sqlite3", path)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var q = ""
+	q = "select title, url from urls order by last_visit_time desc limit 100"
+	rows, err := db.Query(q)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	var historys []*History
+	for rows.Next() {
+		var title, url string
+		if err := rows.Scan(&title, &url); err != nil {
+			panic(err)
+		}
+		historys = append(historys, &History{
+			Title: title,
+			URL:   url,
+		})
+	}
+	return historys, nil
 }
