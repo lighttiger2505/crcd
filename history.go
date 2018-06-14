@@ -27,6 +27,7 @@ func history(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	defer os.Remove(readFilePath)
 
 	historys, err := selectHistory(readFilePath)
 	if err != nil {
