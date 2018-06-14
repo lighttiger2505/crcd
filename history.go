@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 	homedir "github.com/mitchellh/go-homedir"
@@ -33,8 +34,9 @@ func history(c *cli.Context) error {
 	}
 
 	for _, history := range historys {
-		fmt.Println(history.Title, history.URL)
+		fmt.Println(strings.Trim(history.Title, " "), "    ", history.URL)
 	}
+
 	return nil
 }
 
@@ -84,7 +86,7 @@ func selectHistory(path string) ([]*History, error) {
 	defer db.Close()
 
 	var q = ""
-	q = "select title, url from urls order by last_visit_time desc limit 100"
+	q = "select title, url from urls order by last_visit_time desc"
 	rows, err := db.Query(q)
 	if err != nil {
 		panic(err)
