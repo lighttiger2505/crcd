@@ -13,7 +13,8 @@ build: $(SRCS)
 
 .PHONY: install
 install: $(SRCS)
-	go install -i $(NAME) $(LDFLAGS) ./...
+	go install
+	mv $(GOPATH)/bin/browser-hb $(GOPATH)/bin/bhb
 
 .PHONY: dep
 dep:
