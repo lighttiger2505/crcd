@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 
+	"github.com/fatih/color"
 	_ "github.com/mattn/go-sqlite3"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
@@ -34,8 +34,11 @@ func history(c *cli.Context) error {
 		return err
 	}
 
+	clr := color.New(color.FgCyan)
 	for _, history := range historys {
-		fmt.Println(strings.Trim(history.Title, " "), "    ", history.URL)
+		clr.Print(history.Title)
+		fmt.Print("    ")
+		fmt.Println(history.URL)
 	}
 
 	return nil
