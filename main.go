@@ -26,7 +26,7 @@ func newApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = "browser-hb"
 	app.HelpName = "bhb"
-	app.Usage = "CLI tool to list browser history and bookmarks."
+	app.Usage = "CLI tool to list browser history and bookmark."
 	app.UsageText = "bhb [options]"
 	app.Version = "0.0.1"
 	app.Author = "lighttiger2505"
@@ -41,13 +41,13 @@ func newApp() *cli.App {
 		{
 			Name:    "history",
 			Aliases: []string{"s"},
-			Usage:   "Show browser history",
+			Usage:   "Show browser history list",
 			Action:  history,
 		},
 		{
 			Name:    "bookmark",
 			Aliases: []string{"b"},
-			Usage:   "Show browser bookmark",
+			Usage:   "Show browser bookmark list",
 			Action:  bookmark,
 		},
 	}
