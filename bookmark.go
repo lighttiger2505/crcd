@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/fatih/color"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
 )
@@ -52,13 +51,15 @@ func bookmark(c *cli.Context) error {
 
 	bs := collectBookmark(root.Roots.BookmarkBar.Children)
 
-	clr := color.New(color.FgCyan)
+	table := [][]string{}
 	for _, b := range bs {
-		clr.Print(b.Name)
-		clr.Print("    ")
-		fmt.Println(b.URL)
+		table = append(table, []string{b.Name, b.URL})
 	}
 
+	lines := Format(table, 2, []int{40}, "", []int{1})
+	for _, line := range lines {
+		fmt.Println(line)
+	}
 	return nil
 }
 

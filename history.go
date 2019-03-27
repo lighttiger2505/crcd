@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/fatih/color"
 	_ "github.com/mattn/go-sqlite3"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
@@ -34,11 +33,14 @@ func history(c *cli.Context) error {
 		return err
 	}
 
-	clr := color.New(color.FgCyan)
+	table := [][]string{}
 	for _, history := range historys {
-		clr.Print(history.Title)
-		fmt.Print("    ")
-		fmt.Println(history.URL)
+		table = append(table, []string{history.Title, history.URL})
+	}
+
+	lines := Format(table, 2, []int{40}, "", []int{1})
+	for _, line := range lines {
+		fmt.Println(line)
 	}
 
 	return nil
