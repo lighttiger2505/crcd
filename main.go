@@ -42,13 +42,19 @@ func newApp() *cli.App {
 			Name:    "history",
 			Aliases: []string{"s"},
 			Usage:   "Show browser history list",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "range, r",
+					Usage: "relative data range",
+				},
+			},
 			Action:  history,
 		},
 		{
 			Name:    "bookmark",
 			Aliases: []string{"b"},
 			Usage:   "Show browser bookmark list",
-			Action:  bookmark,
+			Action: bookmark,
 		},
 	}
 	return app
