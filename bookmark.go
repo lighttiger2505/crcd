@@ -11,6 +11,11 @@ import (
 	"github.com/urfave/cli"
 )
 
+const (
+	TypeURL    = "url"
+	TypeFolder = "folder"
+)
+
 type BookmarkRoot struct {
 	Checksum string `json:"checksum"`
 	Version  int    `json:"version"`
@@ -34,6 +39,8 @@ type BookmarkChildren struct {
 		LastVisitedDesktop string `json:"last_visited_desktop"`
 	} `json:"meta_info,omitempty"`
 	Children []BookmarkChildren `json:"children,omitempty"`
+	// Append parend folders
+	Path string
 }
 
 func bookmark(c *cli.Context) error {
@@ -49,11 +56,11 @@ func bookmark(c *cli.Context) error {
 		return err
 	}
 
-	bs := collectBookmark(root.Roots.BookmarkBar.Children)
+	bs := collectBookmarkWithPath(root.Roots.BookmarkBar.Children, "")
 
 	table := [][]string{}
 	for _, b := range bs {
-		table = append(table, []string{b.Name, b.URL})
+		table = append(table, []string{b.Path + b.Name, b.URL})
 	}
 
 	lines := Format(table, 2, []int{40}, "", []int{1})
@@ -89,6 +96,21 @@ func collectBookmark(children []BookmarkChildren) []BookmarkChildren {
 			results = append(results, child)
 		}
 		results = append(results, collectBookmark(child.Children)...)
+	}
+	return results
+}
+
+func collectBookmarkWithPath(children []BookmarkChildren, p string) []BookmarkChildren {
+	var results []BookmarkChildren
+	for _, child := range children {
+		if child.Type == TypeFolder {
+			p = p + "/" + child.Name
+		}
+		child.Path = p
+		if child.Type == TypeURL {
+			results = append(results, child)
+		}
+		results = append(results, collectBookmarkWithPath(child.Children, p)...)
 	}
 	return results
 }
