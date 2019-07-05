@@ -43,7 +43,12 @@ type BookmarkChildren struct {
 	Path string
 }
 
+func (c *BookmarkChildren) fullpath() string {
+	return c.Path + "/" + c.Name
+}
+
 func bookmark(c *cli.Context) error {
+
 	dbPath := getBookmarkPath(runtime.GOOS)
 
 	bytes, err := ioutil.ReadFile(dbPath)
@@ -60,10 +65,10 @@ func bookmark(c *cli.Context) error {
 
 	table := [][]string{}
 	for _, b := range bs {
-		table = append(table, []string{b.Path + b.Name, b.URL})
+		table = append(table, []string{b.fullpath(), b.URL})
 	}
 
-	lines := Format(table, 2, []int{40}, "", []int{1})
+	lines := Format(table, 2, []int{96}, "", []int{1})
 	for _, line := range lines {
 		fmt.Println(line)
 	}
@@ -104,13 +109,12 @@ func collectBookmarkWithPath(children []BookmarkChildren, p string) []BookmarkCh
 	var results []BookmarkChildren
 	for _, child := range children {
 		if child.Type == TypeFolder {
-			p = p + "/" + child.Name
+			results = append(results, collectBookmarkWithPath(child.Children, p+"/"+child.Name)...)
 		}
-		child.Path = p
 		if child.Type == TypeURL {
+			child.Path = p
 			results = append(results, child)
 		}
-		results = append(results, collectBookmarkWithPath(child.Children, p)...)
 	}
 	return results
 }
