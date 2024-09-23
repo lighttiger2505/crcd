@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
 )
 
@@ -22,7 +22,10 @@ type History struct {
 }
 
 func history(c *cli.Context) error {
-	dbPath := getHistoryPath(runtime.GOOS)
+	dbPath, err := getHistoryPath(runtime.GOOS)
+	if err != nil {
+		return err
+	}
 
 	readFilePath, err := copyHisotryDB(dbPath)
 	if err != nil {
@@ -58,10 +61,10 @@ func history(c *cli.Context) error {
 	return nil
 }
 
-func getHistoryPath(goos string) string {
-	home, err := homedir.Dir()
+func getHistoryPath(goos string) (string, error) {
+	u, err := user.Current()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	var browserHistoryPath string
@@ -74,7 +77,7 @@ func getHistoryPath(goos string) string {
 		browserHistoryPath = ".config/google-chrome/Default/History"
 	}
 
-	return filepath.Join(home, browserHistoryPath)
+	return filepath.Join(u.HomeDir, browserHistoryPath), nil
 }
 
 func copyHisotryDB(dbPath string) (string, error) {

@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
 )
 
@@ -49,7 +49,10 @@ func (c *BookmarkChildren) fullpath() string {
 
 func bookmark(c *cli.Context) error {
 
-	dbPath := getBookmarkPath(runtime.GOOS)
+	dbPath, err := getBookmarkPath(runtime.GOOS)
+	if err != nil {
+		return err
+	}
 
 	bytes, err := os.ReadFile(dbPath)
 	if err != nil {
@@ -75,10 +78,10 @@ func bookmark(c *cli.Context) error {
 	return nil
 }
 
-func getBookmarkPath(goos string) string {
-	home, err := homedir.Dir()
+func getBookmarkPath(goos string) (string, error) {
+	u, err := user.Current()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	var browserBookmarkPath string
@@ -91,7 +94,7 @@ func getBookmarkPath(goos string) string {
 		browserBookmarkPath = ".config/google-chrome/Default/Bookmarks"
 	}
 
-	return filepath.Join(home, browserBookmarkPath)
+	return filepath.Join(u.HomeDir, browserBookmarkPath), nil
 }
 
 func collectBookmark(children []BookmarkChildren) []BookmarkChildren {

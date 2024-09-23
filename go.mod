@@ -5,7 +5,6 @@ go 1.22.5
 require (
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/mattn/go-sqlite3 v1.14.23
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/urfave/cli v1.22.15
 )
 
