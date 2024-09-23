@@ -33,7 +33,19 @@ func fzfOpen(inputs []string) error {
 	// Build fzf.Options
 	options, err := fzf.ParseOptions(
 		true, // whether to load defaults ($FZF_DEFAULT_OPTS_FILE and $FZF_DEFAULT_OPTS)
-		[]string{"--multi", "--reverse", "--border", "--height=40%"},
+		[]string{
+			"--ansi",
+			"--read0",
+			"--multi",
+			"--info=inline-right",
+			"--reverse",
+			"--highlight-line",
+			"--cycle",
+			"--wrap",
+			"--wrap-sign=' ↳ '",
+			"--border",
+			`--delimiter="\n · "`,
+		},
 	)
 	if err != nil {
 		exit(fzf.ExitError, err)
