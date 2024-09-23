@@ -9,7 +9,7 @@ DIST_DIRS := find * -type d -exec
 
 .PHONY: build
 build: $(SRCS)
-	go build -i -o $(NAME) $(LDFLAGS) ./...
+	go build -o $(NAME) $(LDFLAGS) ./...
 
 .PHONY: install
 install: $(SRCS)
