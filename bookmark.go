@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -65,14 +64,18 @@ func bookmark(c *cli.Context) error {
 
 	bs := collectBookmarkWithPath(root.Roots.BookmarkBar.Children, "")
 
-	table := [][]string{}
+	lines := []string{}
 	for _, b := range bs {
-		table = append(table, []string{b.fullpath(), b.URL})
+		lines = append(lines, b.Name+"\n"+b.URL)
 	}
-
-	lines := Format(table, 2, []int{96}, "", []int{1})
-	for _, line := range lines {
-		fmt.Println(line)
+	selectedURL, err := fzfOpen(lines)
+	if err != nil {
+		return err
+	}
+	if selectedURL != "" {
+		if err := openbrowser(selectedURL); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -1,13 +1,32 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"strings"
+	"sync"
 
 	fzf "github.com/junegunn/fzf/src"
 )
 
-func fzfOpen(inputs []string) error {
+type safeString struct {
+	s   string
+	mux sync.Mutex
+}
+
+func (ss *safeString) Store(str string) {
+	ss.mux.Lock()
+	defer ss.mux.Unlock()
+	ss.s = str
+}
+
+func (ss *safeString) Load() string {
+	ss.mux.Lock()
+	defer ss.mux.Unlock()
+	return ss.s
+}
+
+func fzfOpen(inputs []string) (string, error) {
+	ss := safeString{}
+
 	inputChan := make(chan string)
 	go func() {
 		for _, s := range inputs {
@@ -19,16 +38,13 @@ func fzfOpen(inputs []string) error {
 	outputChan := make(chan string)
 	go func() {
 		for s := range outputChan {
-			fmt.Println("Got: " + s)
+			sp := strings.Split(s, "\n")
+			url := sp[1]
+			if url != "" {
+				ss.Store(url)
+			}
 		}
 	}()
-
-	exit := func(code int, err error) {
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
-		}
-		os.Exit(code)
-	}
 
 	// Build fzf.Options
 	options, err := fzf.ParseOptions(
@@ -48,7 +64,7 @@ func fzfOpen(inputs []string) error {
 		},
 	)
 	if err != nil {
-		exit(fzf.ExitError, err)
+		return "", err
 	}
 
 	// Set up input and output channels
@@ -57,7 +73,7 @@ func fzfOpen(inputs []string) error {
 
 	// Run fzf
 	if _, err := fzf.Run(options); err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return ss.Load(), nil
 }
