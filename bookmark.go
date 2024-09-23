@@ -48,7 +48,6 @@ func (c *BookmarkChildren) fullpath() string {
 }
 
 func bookmark(c *cli.Context) error {
-
 	dbPath, err := getBookmarkPath(runtime.GOOS)
 	if err != nil {
 		return err
