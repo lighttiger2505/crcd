@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -83,7 +82,7 @@ func copyHisotryDB(dbPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tmpFile, err := ioutil.TempFile("/tmp", "bhb")
+	tmpFile, err := os.CreateTemp("/tmp", "bhb")
 	if err != nil {
 		return "", err
 	}

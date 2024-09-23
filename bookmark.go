@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 
@@ -51,7 +51,7 @@ func bookmark(c *cli.Context) error {
 
 	dbPath := getBookmarkPath(runtime.GOOS)
 
-	bytes, err := ioutil.ReadFile(dbPath)
+	bytes, err := os.ReadFile(dbPath)
 	if err != nil {
 		return err
 	}
