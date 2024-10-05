@@ -161,25 +161,36 @@ func leadingInt(s string) (x int64, rem string, err error) {
 	return x, s[i:], nil
 }
 
+type RecencyModifier struct {
+	AgeHours float64
+	Score    int
+}
+
+var recencyModifiers = []*RecencyModifier{
+	// 4時間以内
+	{AgeHours: 4, Score: 100},
+	// 1日以内
+	{AgeHours: 24, Score: 80},
+	// 3日以内
+	{AgeHours: 24 * 3, Score: 60},
+	// 1週間以内
+	{AgeHours: 24 * 7, Score: 40},
+	// 1ヶ月以内
+	{AgeHours: 24 * 30, Score: 20},
+	// 90日以内
+	{AgeHours: 24 * 90, Score: 10},
+}
+
 // Recencyの重みを決定する関数
 func getRecencyWeight(lastVisit time.Time) int {
 	now := time.Now()
 	duration := now.Sub(lastVisit)
-
-	// 1日以内
-	if duration.Hours() < 24 {
-		return 100
+	for _, recentModifyer := range recencyModifiers {
+		if duration.Hours() < recentModifyer.AgeHours {
+			return recentModifyer.Score
+		}
 	}
-	// 1週間以内
-	if duration.Hours() < 24*7 {
-		return 70
-	}
-	// 1ヶ月以内
-	if duration.Hours() < 24*30 {
-		return 50
-	}
-	// 1年以上前
-	return 30
+	return 5
 }
 
 // Frecencyスコアを計算する関数
