@@ -14,15 +14,7 @@ build: $(SRCS)
 .PHONY: install
 install: $(SRCS)
 	go install
-	mv $(GOPATH)/bin/browser-hb $(GOPATH)/bin/bhb
-
-.PHONY: dep
-dep:
-	go get -u github.com/golang/dep/cmd/dep
-
-.PHONY: ensure
-ensure: dep
-	$(GOPATH)/bin/dep ensure
+	mv $(GOROOT)/bin/browser-hb $(GOROOT)/bin/bhb
 
 .PHONY: test
 test:
