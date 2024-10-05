@@ -38,6 +38,9 @@ order by last_visit_time desc
 	}
 	defer rows.Close()
 
+	// 現在のロケールのタイムゾーンを取得
+	currentTime := time.Now()
+	_, tz := currentTime.Zone()
 	histories := []*History{}
 	for rows.Next() {
 		var lastVisitTime int64
@@ -50,7 +53,11 @@ order by last_visit_time desc
 		); err != nil {
 			panic(err)
 		}
-		history.LastVisitTime = webkitToTime(lastVisitTime)
+		// WebKitのタイムスタンプをtime.Timeに変換
+		t := webkitToTime(lastVisitTime)
+		// PCのタイムゾーンに合わせる
+		history.LastVisitTime = t.In(time.FixedZone("Local", tz))
+
 		histories = append(histories, history)
 	}
 	return histories, nil
