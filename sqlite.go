@@ -57,10 +57,10 @@ order by last_visit_time desc
 }
 
 func webkitToTime(webkitTimestamp int64) time.Time {
-	// WebKitの基準日 (2001-01-01 00:00:00 UTC)
-	const webkitEpoch = 978307200 // 1970-01-01 00:00:00から2001-01-01 00:00:00までの秒数
+	// WebKitの基準日 (1601-01-01 00:00:00 UTC)
+	var webkitEpochTime = time.Date(1601, 1, 1, 0, 0, 0, 0, time.UTC)
 	// マイクロ秒単位を秒に変換
 	seconds := webkitTimestamp / 1000000
 	// 基準日にタイムスタンプの経過秒を追加してtime.Timeに変換
-	return time.Unix(webkitEpoch+seconds, 0).UTC()
+	return time.Unix(webkitEpochTime.Unix()+seconds, 0).UTC()
 }

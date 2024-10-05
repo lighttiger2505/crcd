@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"sort"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -33,10 +34,14 @@ func history(c *cli.Context) error {
 		lastdate = d.Format("2006-01-02 15:04:05")
 	}
 
+	// GoogleChromeのブラウザ履歴を取得
 	histories, err := selectHistory(readFilePath, lastdate)
 	if err != nil {
 		return err
 	}
+
+	// Frecencyでソート
+	histories = sortByFrecency(histories)
 
 	lines := []string{}
 	for _, b := range histories {
@@ -154,4 +159,39 @@ func leadingInt(s string) (x int64, rem string, err error) {
 		}
 	}
 	return x, s[i:], nil
+}
+
+// Recencyの重みを決定する関数
+func getRecencyWeight(lastVisit time.Time) int {
+	now := time.Now()
+	duration := now.Sub(lastVisit)
+
+	// 1日以内
+	if duration.Hours() < 24 {
+		return 100
+	}
+	// 1週間以内
+	if duration.Hours() < 24*7 {
+		return 70
+	}
+	// 1ヶ月以内
+	if duration.Hours() < 24*30 {
+		return 50
+	}
+	// 1年以上前
+	return 30
+}
+
+// Frecencyスコアを計算する関数
+func calculateFrecency(history *History) int {
+	recencyWeight := getRecencyWeight(history.LastVisitTime)
+	return history.VisitCount * recencyWeight
+}
+
+// Frecencyに基づいてソートする関数
+func sortByFrecency(histories []*History) []*History {
+	sort.Slice(histories, func(i, j int) bool {
+		return calculateFrecency(histories[i]) > calculateFrecency(histories[j])
+	})
+	return histories
 }
