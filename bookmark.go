@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"runtime"
 
+	"github.com/fatih/color"
 	"github.com/urfave/cli"
 )
 
@@ -64,7 +66,10 @@ func bookmark(c *cli.Context) error {
 
 	lines := []string{}
 	for _, b := range bs {
-		lines = append(lines, b.Name+"\n"+b.URL)
+		name := color.YellowString(b.Name)
+		url := color.HiBlackString(b.URL)
+		line := fmt.Sprintf("%s\n%s", name, url)
+		lines = append(lines, line)
 	}
 	selectedURL, err := fzfOpen(lines)
 	if err != nil {

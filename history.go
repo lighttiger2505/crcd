@@ -2,12 +2,14 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"runtime"
 	"sort"
 	"time"
 
+	"github.com/fatih/color"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/urfave/cli"
 )
@@ -45,7 +47,11 @@ func history(c *cli.Context) error {
 
 	lines := []string{}
 	for _, b := range histories {
-		lines = append(lines, b.Title+"("+b.LastVisitTime.Format(time.RFC3339)+")"+"\n"+b.URL)
+		title := color.YellowString(b.Title)
+		lastVisitTime := b.LastVisitTime.Format(time.RFC3339)
+		url := color.HiBlackString(b.URL)
+		line := fmt.Sprintf("%s (%s)\n%s", title, lastVisitTime, url)
+		lines = append(lines, line)
 	}
 
 	selectedURL, err := fzfOpen(lines)
