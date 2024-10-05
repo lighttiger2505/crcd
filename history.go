@@ -11,12 +11,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-type History struct {
-	Title         string
-	URL           string
-	LastVisitDate string
-}
-
 func history(c *cli.Context) error {
 	dbPath, err := getHistoryPath(runtime.GOOS)
 	if err != nil {
@@ -46,7 +40,7 @@ func history(c *cli.Context) error {
 
 	lines := []string{}
 	for _, b := range histories {
-		lines = append(lines, b.Title+"("+b.LastVisitDate+")"+"\n"+b.URL)
+		lines = append(lines, b.Title+"("+b.LastVisitTime.Format(time.RFC3339)+")"+"\n"+b.URL)
 	}
 
 	selectedURL, err := fzfOpen(lines)
