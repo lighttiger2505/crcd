@@ -1,12 +1,9 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"io"
 	"os"
-	"os/user"
-	"path/filepath"
 	"runtime"
 	"time"
 
@@ -64,25 +61,6 @@ func history(c *cli.Context) error {
 	return nil
 }
 
-func getHistoryPath(goos string) (string, error) {
-	u, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	var browserHistoryPath string
-	switch goos {
-	case "darwin":
-		browserHistoryPath = "Library/Application Support/Google/Chrome/Default/History"
-	case "windows":
-		// browserHistoryPath = ".config/google-chrome/Default/History"
-	default:
-		browserHistoryPath = ".config/google-chrome/Default/History"
-	}
-
-	return filepath.Join(u.HomeDir, browserHistoryPath), nil
-}
-
 func copyHisotryDB(dbPath string) (string, error) {
 	dbFile, err := os.Open(dbPath)
 	if err != nil {
@@ -100,39 +78,6 @@ func copyHisotryDB(dbPath string) (string, error) {
 	tmpFile.Close()
 
 	return readFilePath, nil
-}
-
-func selectHistory(path string, lastdate string) ([]*History, error) {
-	db, err := sql.Open("sqlite3", path)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	// lastdate = "2019-03-27 12:46:22"
-	q := "select title, url, last_visit_time from urls order by last_visit_time desc"
-	if lastdate != "" {
-		q = "select title, url, datetime(last_visit_time / 1000000 + (strftime('%s', '1601-01-01')), 'unixepoch') from urls where datetime(last_visit_time / 1000000 + (strftime('%s', '1601-01-01')), 'unixepoch') >= ? order by last_visit_time desc"
-	}
-	rows, err := db.Query(q, lastdate)
-	if err != nil {
-		panic(err)
-	}
-	defer rows.Close()
-
-	var historys []*History
-	for rows.Next() {
-		var title, url, lastVisitDate string
-		if err := rows.Scan(&title, &url, &lastVisitDate); err != nil {
-			panic(err)
-		}
-		historys = append(historys, &History{
-			Title:         title,
-			URL:           url,
-			LastVisitDate: lastVisitDate,
-		})
-	}
-	return historys, nil
 }
 
 var unitMap = map[string]string{

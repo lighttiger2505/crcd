@@ -3,8 +3,6 @@ package main
 import (
 	"encoding/json"
 	"os"
-	"os/user"
-	"path/filepath"
 	"runtime"
 
 	"github.com/urfave/cli"
@@ -78,25 +76,6 @@ func bookmark(c *cli.Context) error {
 		}
 	}
 	return nil
-}
-
-func getBookmarkPath(goos string) (string, error) {
-	u, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	var browserBookmarkPath string
-	switch goos {
-	case "darwin":
-		browserBookmarkPath = "Library/Application Support/Google/Chrome/Default/Bookmarks"
-	case "windows":
-		// browserBookmarkPath = ".config/google-chrome/Default/History"
-	default:
-		browserBookmarkPath = ".config/google-chrome/Default/Bookmarks"
-	}
-
-	return filepath.Join(u.HomeDir, browserBookmarkPath), nil
 }
 
 func collectBookmark(children []BookmarkChildren) []BookmarkChildren {
