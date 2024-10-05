@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/user"
@@ -43,21 +42,25 @@ func history(c *cli.Context) error {
 		lastdate = d.Format("2006-01-02 15:04:05")
 	}
 
-	historys, err := selectHistory(readFilePath, lastdate)
+	histories, err := selectHistory(readFilePath, lastdate)
 	if err != nil {
 		return err
 	}
 
-	table := [][]string{}
-	for _, history := range historys {
-		table = append(table, []string{history.Title, history.URL})
+	lines := []string{}
+	for _, b := range histories {
+		lines = append(lines, b.Title+"("+b.LastVisitDate+")"+"\n"+b.URL)
 	}
 
-	lines := Format(table, 2, []int{40}, "", []int{1})
-	for _, line := range lines {
-		fmt.Println(line)
+	selectedURL, err := fzfOpen(lines)
+	if err != nil {
+		return err
 	}
-
+	if selectedURL != "" {
+		if err := openbrowser(selectedURL); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
