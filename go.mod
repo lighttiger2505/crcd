@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/charlievieth/fastwalk v1.0.8 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/fatih/color v1.17.0 // indirect

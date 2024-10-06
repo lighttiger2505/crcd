@@ -6,39 +6,40 @@ import (
 )
 
 func getHistoryPath(goos string) (string, error) {
-	u, err := user.Current()
+	profilePath, err := getChromeProfilePath(goos)
 	if err != nil {
 		return "", err
 	}
-
-	var browserHistoryPath string
-	switch goos {
-	case "darwin":
-		browserHistoryPath = "Library/Application Support/Google/Chrome/Default/History"
-	case "windows":
-		// browserHistoryPath = ".config/google-chrome/Default/History"
-	default:
-		browserHistoryPath = ".config/google-chrome/Default/History"
-	}
-
-	return filepath.Join(u.HomeDir, browserHistoryPath), nil
+	return filepath.Join(profilePath, "History"), nil
 }
 
 func getBookmarkPath(goos string) (string, error) {
+	profilePath, err := getChromeProfilePath(goos)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(profilePath, "Bookmarks"), nil
+}
+
+func getChromeProfilePath(goos string) (string, error) {
 	u, err := user.Current()
 	if err != nil {
 		return "", err
 	}
 
-	var browserBookmarkPath string
-	switch goos {
-	case "darwin":
-		browserBookmarkPath = "Library/Application Support/Google/Chrome/Default/Bookmarks"
-	case "windows":
-		// browserBookmarkPath = ".config/google-chrome/Default/History"
-	default:
-		browserBookmarkPath = ".config/google-chrome/Default/Bookmarks"
+	cfg, err := LoadConfig()
+	if err != nil {
+		return "", err
 	}
 
-	return filepath.Join(u.HomeDir, browserBookmarkPath), nil
+	var chromeProfilePath string
+	switch goos {
+	case "darwin":
+		chromeProfilePath = "Library/Application Support/Google/Chrome"
+	case "windows":
+		// chromeProfilePath = ".config/google-chrome/Default/History"
+	default:
+		chromeProfilePath = ".config/google-chrome"
+	}
+	return filepath.Join(u.HomeDir, chromeProfilePath, cfg.Profile), nil
 }

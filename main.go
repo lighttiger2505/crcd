@@ -56,6 +56,12 @@ func newApp() *cli.App {
 			Usage:   "Show browser bookmark list",
 			Action:  bookmark,
 		},
+		{
+			Name:    "config",
+			Aliases: []string{"c"},
+			Usage:   "Edit config",
+			Action:  config,
+		},
 	}
 	return app
 }
