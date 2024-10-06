@@ -42,9 +42,10 @@ func history(c *cli.Context) error {
 		return err
 	}
 
-	// Frecencyでソート
+	// Frecencyアルゴリズムでソート
 	histories = sortByFrecency(histories)
 
+	// FZFで表示するための文字列を作成
 	lines := []string{}
 	for _, b := range histories {
 		title := color.YellowString(b.Title)
@@ -54,10 +55,14 @@ func history(c *cli.Context) error {
 		lines = append(lines, line)
 	}
 
-	selectedURL, err := fzfOpen(lines)
+	// FZFを実行して選択
+	// Frequencyアルゴリズムのソートを維持するため、FZFのソートはしない
+	selectedURL, err := fzfOpen(lines, "--no-sort")
 	if err != nil {
 		return err
 	}
+
+	// 取得したURLをブラウザで開く
 	if selectedURL != "" {
 		if err := openbrowser(selectedURL); err != nil {
 			return err

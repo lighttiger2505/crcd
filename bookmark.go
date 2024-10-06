@@ -61,9 +61,9 @@ func bookmark(c *cli.Context) error {
 	if err := json.Unmarshal(bytes, &root); err != nil {
 		return err
 	}
-
 	bs := collectBookmarkWithPath(root.Roots.BookmarkBar.Children, "")
 
+	// FZFで表示するための文字列を作成
 	lines := []string{}
 	for _, b := range bs {
 		name := color.YellowString(b.Name)
@@ -71,10 +71,14 @@ func bookmark(c *cli.Context) error {
 		line := fmt.Sprintf("%s\n%s", name, url)
 		lines = append(lines, line)
 	}
+
+	// FZFを実行して選択
 	selectedURL, err := fzfOpen(lines)
 	if err != nil {
 		return err
 	}
+
+	// 取得したURLをブラウザで開く
 	if selectedURL != "" {
 		if err := openbrowser(selectedURL); err != nil {
 			return err

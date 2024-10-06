@@ -24,7 +24,7 @@ func (ss *safeString) Load() string {
 	return ss.s
 }
 
-func fzfOpen(inputs []string) (string, error) {
+func fzfOpen(inputs []string, opts ...string) (string, error) {
 	ss := safeString{}
 
 	inputChan := make(chan string)
@@ -46,22 +46,25 @@ func fzfOpen(inputs []string) (string, error) {
 		}
 	}()
 
+	baseOpts := []string{
+		"--ansi",
+		"--read0",
+		"--multi",
+		"--info=inline-right",
+		"--reverse",
+		"--highlight-line",
+		"--cycle",
+		"--wrap",
+		"--wrap-sign=' ↳ '",
+		"--border",
+		`--delimiter="\n · "`,
+	}
+	allOpts := append(baseOpts, opts...)
+
 	// Build fzf.Options
 	options, err := fzf.ParseOptions(
 		true, // whether to load defaults ($FZF_DEFAULT_OPTS_FILE and $FZF_DEFAULT_OPTS)
-		[]string{
-			"--ansi",
-			"--read0",
-			"--multi",
-			"--info=inline-right",
-			"--reverse",
-			"--highlight-line",
-			"--cycle",
-			"--wrap",
-			"--wrap-sign=' ↳ '",
-			"--border",
-			`--delimiter="\n · "`,
-		},
+		allOpts,
 	)
 	if err != nil {
 		return "", err
