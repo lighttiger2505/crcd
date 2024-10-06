@@ -1,4 +1,4 @@
-module github.com/lighttiger2505/browser-hb
+module github.com/lighttiger2505/crcd
 
 go 1.22.5
 

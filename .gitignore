@@ -12,6 +12,5 @@
 *.out
 
 vendor/
-bhb
-browser-hb
+crcd
 dist/

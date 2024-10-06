@@ -24,10 +24,10 @@ func main() {
 
 func newApp() *cli.App {
 	app := cli.NewApp()
-	app.Name = "browser-hb"
-	app.HelpName = "bhb"
+	app.Name = "Chrome Chrono Drive"
+	app.HelpName = "crcd"
 	app.Usage = "CLI tool to list browser history and bookmark."
-	app.UsageText = "bhb [options]"
+	app.UsageText = "crcd [options]"
 	app.Version = "0.0.1"
 	app.Author = "lighttiger2505"
 	app.Email = "lighttiger2505@gmail.com"
@@ -48,13 +48,13 @@ func newApp() *cli.App {
 					Usage: "relative data range",
 				},
 			},
-			Action:  history,
+			Action: history,
 		},
 		{
 			Name:    "bookmark",
 			Aliases: []string{"b"},
 			Usage:   "Show browser bookmark list",
-			Action: bookmark,
+			Action:  bookmark,
 		},
 	}
 	return app

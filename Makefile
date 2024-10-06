@@ -1,4 +1,3 @@
-NAME := bhb
 VERSION := v0.1.0
 REVISION := $(shell git rev-parse --short HEAD)
 GOVERSION := $(go version)
@@ -9,12 +8,11 @@ DIST_DIRS := find * -type d -exec
 
 .PHONY: build
 build: $(SRCS)
-	go build -o $(NAME) $(LDFLAGS) ./...
+	go build $(LDFLAGS) ./...
 
 .PHONY: install
 install: $(SRCS)
 	go install
-	mv $(GOROOT)/bin/browser-hb $(GOROOT)/bin/bhb
 
 .PHONY: test
 test:
