@@ -3,8 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"runtime"
 	"sort"
 	"time"
@@ -20,12 +18,6 @@ func history(c *cli.Context) error {
 		return err
 	}
 
-	readFilePath, err := copyHisotryDB(dbPath)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(readFilePath)
-
 	lastdate := ""
 	if c.String("range") != "" {
 		year, month, day, err := parseDate(c.String("range"))
@@ -37,7 +29,7 @@ func history(c *cli.Context) error {
 	}
 
 	// GoogleChromeのブラウザ履歴を取得
-	histories, err := selectHistory(readFilePath, lastdate)
+	histories, err := selectHistory(dbPath, lastdate)
 	if err != nil {
 		return err
 	}
@@ -69,25 +61,6 @@ func history(c *cli.Context) error {
 		}
 	}
 	return nil
-}
-
-func copyHisotryDB(dbPath string) (string, error) {
-	dbFile, err := os.Open(dbPath)
-	if err != nil {
-		return "", err
-	}
-	tmpFile, err := os.CreateTemp("/tmp", "bhb")
-	if err != nil {
-		return "", err
-	}
-	if _, err := io.Copy(tmpFile, dbFile); err != nil {
-		return "", err
-	}
-	readFilePath := tmpFile.Name()
-	dbFile.Close()
-	tmpFile.Close()
-
-	return readFilePath, nil
 }
 
 var unitMap = map[string]string{

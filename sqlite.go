@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"net/url"
 	"time"
 )
 
@@ -13,7 +14,8 @@ type History struct {
 }
 
 func selectHistory(path string, lastdate string) ([]*History, error) {
-	db, err := sql.Open("sqlite3", path)
+	dsn := (&url.URL{Scheme: "file", Path: path, RawQuery: "immutable=1"}).String()
+	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		return nil, err
 	}
