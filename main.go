@@ -24,10 +24,10 @@ func main() {
 
 func newApp() *cli.App {
 	app := cli.NewApp()
-	app.Name = "Chrome Chrono Drive"
-	app.HelpName = "crcd"
+	app.Name = "chrosuke"
+	app.HelpName = "chsu"
 	app.Usage = "CLI tool to list browser history and bookmark."
-	app.UsageText = "crcd [options]"
+	app.UsageText = "chsu [options]"
 	app.Version = "0.0.1"
 	app.Author = "lighttiger2505"
 	app.Email = "lighttiger2505@gmail.com"

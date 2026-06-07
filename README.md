@@ -1,12 +1,12 @@
-# Chrome Chrono Drive(crcd)
+# chrosuke(chsu)
 
 CLI tool to list browser history and bookmarks
 
 ## Install
 
 ```sh
-$ git https://github.com/lighttiger2505/crcd
-$ cd crcd
+$ git https://github.com/lighttiger2505/chsu
+$ cd chsu
 $ make install
 ```
 
@@ -14,10 +14,10 @@ $ make install
 
 ```
 NAME:
-   Chrome Chrono Drive - CLI tool to list browser history and bookmark.
+   chrosuke - CLI tool to list browser history and bookmark.
 
 USAGE:
-   crcd [options]
+   chsu [options]
 
 VERSION:
    0.0.1

@@ -58,7 +58,7 @@ func CreateNewConfig(cfgPath string) (*Config, error) {
 }
 
 func FindCredentialPath() (string, error) {
-	appName := "crcd"
+	appName := "chsu"
 	var dir string
 	if runtime.GOOS == "windows" {
 		dir = os.Getenv("APPDATA")

@@ -1,4 +1,4 @@
-module github.com/lighttiger2505/crcd
+module github.com/lighttiger2505/chsu
 
 go 1.22.5
 

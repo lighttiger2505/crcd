@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 概要
 
-`crcd`(Chrome Chrono Drive) は Google Chrome の閲覧履歴・ブックマークを一覧して fzf で選択し、選んだ URL を OS 標準ブラウザで開く CLI ツール。
+`chsu`(chrosuke) は Google Chrome の閲覧履歴・ブックマークを一覧して fzf で選択し、選んだ URL を OS 標準ブラウザで開く CLI ツール。
 
 ## コマンド
 
@@ -31,7 +31,7 @@ CLI 基盤は `urfave/cli` v1。エントリは `main.go` の `newApp()`。サ�
 
 ### 設定（config.go）
 
-**TOML** 形式、`~/.config/crcd/config.toml`(Windows は `%APPDATA%/crcd`)。フィールドは `Profile` のみ（既定 `"Default"`）。ファイルが無ければ既定値で自動生成される。
+**TOML** 形式、`~/.config/chsu/config.toml`(Windows は `%APPDATA%/chsu`)。フィールドは `Profile` のみ（既定 `"Default"`）。ファイルが無ければ既定値で自動生成される。
 
 ### Chrome パス解決（chrome.go）
 
