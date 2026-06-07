@@ -6,70 +6,107 @@ import (
 	"time"
 )
 
+// webkitEpochOffset is the number of seconds between the WebKit epoch
+// (1601-01-01 00:00:00 UTC) and the Unix epoch (1970-01-01 00:00:00 UTC).
+const webkitEpochOffset = int64(11644473600)
+
+// maxVisitSamples is the maximum number of individual visit timestamps sampled per URL.
+const maxVisitSamples = 10
+
 type History struct {
 	Title         string
 	URL           string
 	VisitCount    int
 	LastVisitTime time.Time
+	Visits        []time.Time // sample of recent visit times (most recent first)
 }
 
-func selectHistory(path string, lastdate string) ([]*History, error) {
+func selectHistory(path string, minTime *time.Time) (histories []*History, err error) {
 	dsn := (&url.URL{Scheme: "file", Path: path, RawQuery: "immutable=1"}).String()
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
+	defer func() {
+		if cerr := db.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	q := `
-select
-    title,
-    url,
-    visit_count,
-    last_visit_time
-from
-    urls
-order by last_visit_time desc
-	`
-	if lastdate != "" {
-		q = "select title, url, datetime(last_visit_time / 1000000 + (strftime('%s', '1601-01-01')), 'unixepoch') from urls where datetime(last_visit_time / 1000000 + (strftime('%s', '1601-01-01')), 'unixepoch') >= ? order by last_visit_time desc"
+SELECT u.title, u.url, u.visit_count, u.last_visit_time, v.visit_time
+FROM urls u
+JOIN visits v ON v.url = u.id
+ORDER BY u.id, v.visit_time DESC
+`
+	var args []interface{}
+	if minTime != nil {
+		q = `
+SELECT u.title, u.url, u.visit_count, u.last_visit_time, v.visit_time
+FROM urls u
+JOIN visits v ON v.url = u.id
+WHERE u.last_visit_time >= ?
+ORDER BY u.id, v.visit_time DESC
+`
+		// Convert time.Time to WebKit microsecond timestamp for the filter.
+		webkitMin := (minTime.Unix() + webkitEpochOffset) * 1000000
+		args = append(args, webkitMin)
 	}
-	rows, err := db.Query(q, lastdate)
+
+	rows, err := db.Query(q, args...)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	defer rows.Close()
-
-	// 現在のロケールのタイムゾーンを取得
-	currentTime := time.Now()
-	_, tz := currentTime.Zone()
-	histories := []*History{}
-	for rows.Next() {
-		var lastVisitTime int64
-		history := &History{}
-		if err := rows.Scan(
-			&history.Title,
-			&history.URL,
-			&history.VisitCount,
-			&lastVisitTime,
-		); err != nil {
-			panic(err)
+	defer func() {
+		if cerr := rows.Close(); cerr != nil && err == nil {
+			err = cerr
 		}
-		// WebKitのタイムスタンプをtime.Timeに変換
-		t := webkitToTime(lastVisitTime)
-		// PCのタイムゾーンに合わせる
-		history.LastVisitTime = t.In(time.FixedZone("Local", tz))
+	}()
 
-		histories = append(histories, history)
+	_, tz := time.Now().Zone()
+	loc := time.FixedZone("Local", tz)
+
+	urlIndex := map[string]int{} // url -> index in histories
+
+	for rows.Next() {
+		var (
+			title       string
+			urlStr      string
+			visitCount  int
+			lastVisitWK int64
+			visitWK     int64
+		)
+		if err := rows.Scan(&title, &urlStr, &visitCount, &lastVisitWK, &visitWK); err != nil {
+			return nil, err
+		}
+
+		visitTime := webkitToTime(visitWK).In(loc)
+
+		idx, exists := urlIndex[urlStr]
+		if !exists {
+			h := &History{
+				Title:         title,
+				URL:           urlStr,
+				VisitCount:    visitCount,
+				LastVisitTime: webkitToTime(lastVisitWK).In(loc),
+			}
+			urlIndex[urlStr] = len(histories)
+			histories = append(histories, h)
+			idx = len(histories) - 1
+		}
+
+		if len(histories[idx].Visits) < maxVisitSamples {
+			histories[idx].Visits = append(histories[idx].Visits, visitTime)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return histories, nil
 }
 
 func webkitToTime(webkitTimestamp int64) time.Time {
-	// WebKitの基準日 (1601-01-01 00:00:00 UTC)
-	var webkitEpochTime = time.Date(1601, 1, 1, 0, 0, 0, 0, time.UTC)
-	// マイクロ秒単位を秒に変換
+	// WebKit timestamps are microseconds since 1601-01-01 00:00:00 UTC.
 	seconds := webkitTimestamp / 1000000
-	// 基準日にタイムスタンプの経過秒を追加してtime.Timeに変換
-	return time.Unix(webkitEpochTime.Unix()+seconds, 0).UTC()
+	return time.Unix(seconds-webkitEpochOffset, 0).UTC()
 }

@@ -18,36 +18,34 @@ func history(c *cli.Context) error {
 		return err
 	}
 
-	lastdate := ""
+	var minTime *time.Time
 	if c.String("range") != "" {
 		year, month, day, err := parseDate(c.String("range"))
 		if err != nil {
 			return err
 		}
 		d := time.Now().AddDate(-1*year, -1*month, -1*day)
-		lastdate = d.Format("2006-01-02 15:04:05")
+		minTime = &d
 	}
 
-	// GoogleChromeのブラウザ履歴を取得
-	histories, err := selectHistory(dbPath, lastdate)
+	// Retrieve Chrome browser history.
+	histories, err := selectHistory(dbPath, minTime)
 	if err != nil {
 		return err
 	}
 
-	// Frecencyアルゴリズムでソート
-	histories = sortByFrecency(histories)
+	// Sort by frecency and get precomputed scores in one pass.
+	histories, scores := sortByFrecency(histories)
 
-	// Calculate frecency scores and determine the width for the left-aligned score column
-	scores := make([]int, len(histories))
+	// Determine the column width for the left-aligned score column.
 	scoreWidth := 0
-	for i, b := range histories {
-		scores[i] = calculateFrecency(b)
-		if w := len(fmt.Sprintf("%d", scores[i])); w > scoreWidth {
+	for _, s := range scores {
+		if w := len(fmt.Sprintf("%d", s)); w > scoreWidth {
 			scoreWidth = w
 		}
 	}
 
-	// FZFで表示するための文字列を作成
+	// Build display lines for FZF.
 	lines := []string{}
 	for i, b := range histories {
 		score := color.WhiteString(fmt.Sprintf("%-*d", scoreWidth, scores[i]))
@@ -57,15 +55,12 @@ func history(c *cli.Context) error {
 		lines = append(lines, line)
 	}
 
-	// FZFを実行して選択
-	// Frequencyアルゴリズムのソートを維持するため、FZFのソートはしない
-	// スコア列（フィールド1）は検索対象から外す
+	// Run FZF. Keep frecency order (--no-sort) and exclude the score column from search (--nth=2..).
 	selectedURL, err := fzfOpen(lines, "--no-sort", "--nth=2..")
 	if err != nil {
 		return err
 	}
 
-	// 取得したURLをブラウザで開く
 	if selectedURL != "" {
 		if err := openbrowser(selectedURL); err != nil {
 			return err
@@ -162,42 +157,66 @@ type RecencyModifier struct {
 }
 
 var recencyModifiers = []*RecencyModifier{
-	// 4時間以内
+	// within 4 hours
 	{AgeHours: 4, Score: 100},
-	// 1日以内
+	// within 1 day
 	{AgeHours: 24, Score: 80},
-	// 3日以内
+	// within 3 days
 	{AgeHours: 24 * 3, Score: 60},
-	// 1週間以内
+	// within 1 week
 	{AgeHours: 24 * 7, Score: 40},
-	// 1ヶ月以内
+	// within 1 month
 	{AgeHours: 24 * 30, Score: 20},
-	// 90日以内
+	// within 90 days
 	{AgeHours: 24 * 90, Score: 10},
 }
 
-// Recencyの重みを決定する関数
+// getRecencyWeight returns a recency score based on how long ago lastVisit occurred.
 func getRecencyWeight(lastVisit time.Time) int {
 	now := time.Now()
 	duration := now.Sub(lastVisit)
-	for _, recentModifyer := range recencyModifiers {
-		if duration.Hours() < recentModifyer.AgeHours {
-			return recentModifyer.Score
+	for _, m := range recencyModifiers {
+		if duration.Hours() < m.AgeHours {
+			return m.Score
 		}
 	}
 	return 5
 }
 
-// Frecencyスコアを計算する関数
+// calculateFrecency computes frecency as visit_count multiplied by the average
+// recency weight across sampled individual visits. This gives more accurate
+// results than weighting only the last visit time.
 func calculateFrecency(history *History) int {
-	recencyWeight := getRecencyWeight(history.LastVisitTime)
-	return history.VisitCount * recencyWeight
+	if len(history.Visits) == 0 {
+		return 0
+	}
+	sum := 0
+	for _, v := range history.Visits {
+		sum += getRecencyWeight(v)
+	}
+	return history.VisitCount * sum / len(history.Visits)
 }
 
-// Frecencyに基づいてソートする関数
-func sortByFrecency(histories []*History) []*History {
-	sort.Slice(histories, func(i, j int) bool {
-		return calculateFrecency(histories[i]) > calculateFrecency(histories[j])
+// sortByFrecency sorts histories by frecency score (highest first) in a single
+// pass and returns the sorted slice together with the precomputed scores so
+// callers do not need to recalculate.
+func sortByFrecency(histories []*History) ([]*History, []int) {
+	type scored struct {
+		h     *History
+		score int
+	}
+	pairs := make([]scored, len(histories))
+	for i, h := range histories {
+		pairs[i] = scored{h: h, score: calculateFrecency(h)}
+	}
+	sort.Slice(pairs, func(i, j int) bool {
+		return pairs[i].score > pairs[j].score
 	})
-	return histories
+	result := make([]*History, len(pairs))
+	scores := make([]int, len(pairs))
+	for i, p := range pairs {
+		result[i] = p.h
+		scores[i] = p.score
+	}
+	return result, scores
 }
