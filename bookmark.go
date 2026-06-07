@@ -68,7 +68,7 @@ func bookmark(c *cli.Context) error {
 	for _, b := range bs {
 		name := color.YellowString(b.Name)
 		url := color.HiBlackString(b.URL)
-		line := fmt.Sprintf("%s\n%s", name, url)
+		line := fmt.Sprintf("%s  %s", name, url)
 		lines = append(lines, line)
 	}
 

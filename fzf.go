@@ -38,10 +38,12 @@ func fzfOpen(inputs []string, opts ...string) (string, error) {
 	outputChan := make(chan string)
 	go func() {
 		for s := range outputChan {
-			sp := strings.Split(s, "\n")
-			url := sp[1]
-			if url != "" {
-				ss.Store(url)
+			fields := strings.Fields(s)
+			if len(fields) > 0 {
+				url := fields[len(fields)-1]
+				if url != "" {
+					ss.Store(url)
+				}
 			}
 		}
 	}()
@@ -57,7 +59,6 @@ func fzfOpen(inputs []string, opts ...string) (string, error) {
 		"--wrap",
 		"--wrap-sign=' ↳ '",
 		"--border",
-		`--delimiter="\n · "`,
 	}
 	allOpts := append(baseOpts, opts...)
 

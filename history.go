@@ -41,9 +41,8 @@ func history(c *cli.Context) error {
 	lines := []string{}
 	for _, b := range histories {
 		title := color.YellowString(b.Title)
-		lastVisitTime := b.LastVisitTime.Format(time.RFC3339)
 		url := color.HiBlackString(b.URL)
-		line := fmt.Sprintf("%s (%s)\n%s", title, lastVisitTime, url)
+		line := fmt.Sprintf("%s  %s", title, url)
 		lines = append(lines, line)
 	}
 
