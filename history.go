@@ -37,18 +37,30 @@ func history(c *cli.Context) error {
 	// Frecencyアルゴリズムでソート
 	histories = sortByFrecency(histories)
 
+	// Calculate frecency scores and determine the width for the left-aligned score column
+	scores := make([]int, len(histories))
+	scoreWidth := 0
+	for i, b := range histories {
+		scores[i] = calculateFrecency(b)
+		if w := len(fmt.Sprintf("%d", scores[i])); w > scoreWidth {
+			scoreWidth = w
+		}
+	}
+
 	// FZFで表示するための文字列を作成
 	lines := []string{}
-	for _, b := range histories {
+	for i, b := range histories {
+		score := color.WhiteString(fmt.Sprintf("%-*d", scoreWidth, scores[i]))
 		title := color.YellowString(b.Title)
 		url := color.HiBlackString(b.URL)
-		line := fmt.Sprintf("%s  %s", title, url)
+		line := fmt.Sprintf("%s  %s  %s", score, title, url)
 		lines = append(lines, line)
 	}
 
 	// FZFを実行して選択
 	// Frequencyアルゴリズムのソートを維持するため、FZFのソートはしない
-	selectedURL, err := fzfOpen(lines, "--no-sort")
+	// スコア列（フィールド1）は検索対象から外す
+	selectedURL, err := fzfOpen(lines, "--no-sort", "--nth=2..")
 	if err != nil {
 		return err
 	}
